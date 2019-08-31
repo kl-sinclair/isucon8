@@ -1,7 +1,6 @@
 #import multiprocessing
 
-bind = '127.0.0.1:8080'
-#bind = 'unix:/tmp/gunicorn_isucon.sock'
+bind = 'unix:/var/run/torb/gunicorn.sock'
 backlog = 2048
 
 workers = 1
