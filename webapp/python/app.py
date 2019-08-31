@@ -11,6 +11,7 @@ import csv
 from datetime import datetime, timezone
 from functools import partial
 import logging
+import jinja2
 from sqlalchemy import create_engine
 import newrelic.agent
 
@@ -23,6 +24,11 @@ base_path = pathlib.Path(__file__).resolve().parent.parent
 static_folder = base_path / 'static'
 icons_folder = base_path / 'public' / 'icons'
 
+TEMPLATE_CACHE = '/home/isucon/torb/webapp/python/template_cache'
+
+if not os.path.exists(TEMPLATE_CACHE):
+    os.makedirs(TEMPLATE_CACHE)
+
 
 class CustomFlask(flask.Flask):
     jinja_options = flask.Flask.jinja_options.copy()
@@ -33,6 +39,7 @@ class CustomFlask(flask.Flask):
         variable_end_string='))',
         comment_start_string='(#',
         comment_end_string='#)',
+        bytecode_cache=jinja2.FileSystemBytecodeCache(directory=TEMPLATE_CACHE)
     ))
 
 
