@@ -9,6 +9,8 @@ import subprocess
 from io import StringIO
 import csv
 from datetime import datetime, timezone
+from functools import partial
+from sqlalchemy import create_engine
 import newrelic.agent
 
 
@@ -75,19 +77,25 @@ def admin_login_required(f):
     return wrapper
 
 
+SCHEME = 'mysql://{user}:{passwd}@{host}/{db}'.format(
+    user=os.environ['DB_USER'],
+    passwd=os.environ['DB_PASS'],
+    host=os.environ['DB_HOST'],
+    db=os.environ['DB_DATABASE']
+)
+DBCONF = {'charset': 'utf8mb4', 'autocommit': True}
+
+dbengine = create_engine(SCHEME, connect_args=DBCONF)
+
+
 def dbh():
     if hasattr(flask.g, 'db'):
         return flask.g.db
-    flask.g.db = MySQLdb.connect(
-        host=os.environ['DB_HOST'],
-        port=3306,
-        user=os.environ['DB_USER'],
-        password=os.environ['DB_PASS'],
-        database=os.environ['DB_DATABASE'],
-        charset='utf8mb4',
-        cursorclass=MySQLdb.cursors.DictCursor,
-        autocommit=True,
-    )
+
+    conn = dbengine.raw_connection()
+    conn.cursor = partial(conn.cursor, MySQLdb.cursors.DictCursor)
+    flask.g.db = conn
+
     cur = flask.g.db.cursor()
     cur.execute("SET SESSION sql_mode='STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION'")
     return flask.g.db
