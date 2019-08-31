@@ -10,11 +10,13 @@ from io import StringIO
 import csv
 from datetime import datetime, timezone
 from functools import partial
+import logging
 from sqlalchemy import create_engine
 import newrelic.agent
 
 
 newrelic.agent.initialize('/home/isucon/torb/webapp/python/newrelic.ini')
+logging.basicConfig(filename='/tmp/torb.log', level=logging.INFO)
 
 
 base_path = pathlib.Path(__file__).resolve().parent.parent
@@ -85,7 +87,7 @@ SCHEME = 'mysql://{user}:{passwd}@{host}/{db}'.format(
 )
 DBCONF = {'charset': 'utf8mb4', 'autocommit': True}
 
-dbengine = create_engine(SCHEME, connect_args=DBCONF)
+dbengine = create_engine(SCHEME, echo=True, connect_args=DBCONF)
 
 
 def dbh():
